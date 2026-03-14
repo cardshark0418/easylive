@@ -13,7 +13,7 @@ public class ResponseVO implements Serializable {
     public static ResponseVO getSuccessResponseVO(Object data) {
         ResponseVO vo = new ResponseVO();
         vo.setCode(200);
-        vo.setStatus("getSuccessResponseVO");
+        vo.setStatus("success");
         vo.setInfo("操作成功");
         vo.setData(data);
         return vo;

@@ -29,7 +29,7 @@ public class AppInterceptor implements HandlerInterceptor {
         if(request.getRequestURI().contains("/account")){
             return true;
         }
-        String token = CookieUtil.getCookieToken(request);
+        String token = CookieUtil.adminGetCookieToken(request);
         if(StrUtil.isBlank(token)) throw new BusinessException(ResponseCodeEnum.CODE_901);
 
         Object o = redisUtils.get(Constants.REDIS_KEY_ADMIN_TOKEN + token);

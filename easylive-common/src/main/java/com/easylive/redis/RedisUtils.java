@@ -99,8 +99,10 @@ public class RedisUtils {
     /**
      * 获取List列表
      */
-    public List<Object> getQueueList(String key) {
-        return redisTemplate.opsForList().range(key, 0, -1);
+    // 修改 RedisUtils 里的方法定义
+    public <T> List<T> getQueueList(String key) {
+        // 内部逻辑...
+        return (List<T>) redisTemplate.opsForList().range(key, 0, -1);
     }
 
     /**

@@ -102,4 +102,14 @@ public class CategoryInfoServiceImpl extends ServiceImpl<CategoryInfoMapper, Cat
                 .filter(n -> Objects.equals(n.getPCategoryId(), 0))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<CategoryInfo> loadAllCategory() {
+        List<CategoryInfo> list = (List<CategoryInfo>) redisUtils.get(Constants.REDIS_KEY_CATEGORY_LIST);
+        if(list == null || list.isEmpty()){
+            save2Redis();
+            return (List<CategoryInfo>) redisUtils.get(Constants.REDIS_KEY_CATEGORY_LIST);
+        }
+        return list;
+    }
 }

@@ -32,6 +32,12 @@
 			<artifactId>mybatis-plus-boot-starter</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>com.github.yulichang</groupId>
+			<artifactId>mybatis-plus-join-boot-starter</artifactId>
+			<version>1.4.10</version>
+		</dependency>
+
 		<!-- 数据库-->
 		<dependency>
 			<groupId>mysql</groupId>

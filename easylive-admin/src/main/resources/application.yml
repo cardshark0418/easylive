@@ -40,7 +40,7 @@ mybatis:
     map-underscore-to-camel-case: true
 
 project:
-  folder: c:/webser/easylive/
+  folder: E:/AALEARN/Code/EasyLive/
 log:
   root:
     level: debug

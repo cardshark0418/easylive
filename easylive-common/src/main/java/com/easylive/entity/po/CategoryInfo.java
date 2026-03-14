@@ -3,6 +3,7 @@ package com.easylive.entity.po;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -37,6 +38,7 @@ public class CategoryInfo implements Serializable {
     /**
      * 父级分类ID
      */
+    @JsonProperty("pCategoryId")
     private Integer pCategoryId;
 
     /**
@@ -56,6 +58,14 @@ public class CategoryInfo implements Serializable {
 
     @TableField(exist = false)
     public List<CategoryInfo> children = new ArrayList<>();
+
+    public void setChildren(List<CategoryInfo> children) {
+        if (children == null) {
+            this.children = new ArrayList<>();
+        } else {
+            this.children = children;
+        }
+    }
 
 
     @Override

@@ -20,4 +20,6 @@ public interface CategoryInfoService extends IService<CategoryInfo> {
     void changeSort(@NotNull Integer pCategoryId, @NotEmpty String categoryIds);
 
     Object buildTree(List<CategoryInfo> list);
+
+    List<CategoryInfo> loadAllCategory();
 }

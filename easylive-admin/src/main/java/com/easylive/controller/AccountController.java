@@ -65,7 +65,7 @@ public class AccountController {
             }
             String token = UUID.randomUUID().toString();
             redisUtils.setex(Constants.REDIS_KEY_ADMIN_TOKEN+token,account,Constants.ONE_MIN_MILLS*60*24);
-            CookieUtil.setToken2Cookie(response,token);
+            CookieUtil.adminSetToken2Cookie(response,token);
             return ResponseVO.getSuccessResponseVO(account);
         }
         finally {

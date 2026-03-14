@@ -2,6 +2,7 @@ package com.easylive.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.UserInfo;
 import com.easylive.entity.vo.UserLoginDto;
@@ -19,7 +20,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service("userInfoService")
-public class UserInfoServiceImpl implements UserInfoService {
+public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper,UserInfo> implements UserInfoService{
     @Autowired
     private UserInfoMapper userInfoMapper;
     @Autowired
@@ -68,7 +69,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         userLoginDto.setExpireAt((System.currentTimeMillis()+Constants.ONE_MIN_MILLS*60*24*7));
         userLoginDto.setToken(token);
         //token存储到redis
-        redisUtils.setex(Constants.REDIS_KEY_LOGIN_TOKEN+token,userLoginDto, ((long) Constants.ONE_MIN_MILLS / 1000) *60*24*7);
+        redisUtils.setex(Constants.REDIS_KEY_LOGIN_TOKEN+token,userLoginDto,  Constants.ONE_MIN_MILLS  *60*24*7);
         //设置cookie
         CookieUtil.setToken2Cookie(response,token);
         return userLoginDto;

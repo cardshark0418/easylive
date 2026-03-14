@@ -27,6 +27,12 @@
             <artifactId>easylive-common</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.yulichang</groupId>
+            <artifactId>mybatis-plus-join-core</artifactId>
+            <version>1.4.10</version>
+            <scope>compile</scope>
+        </dependency>
 
     </dependencies>
     <build>

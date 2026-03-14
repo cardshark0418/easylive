@@ -29,6 +29,9 @@ public class UserInfo implements Serializable {
      */
     private String nickName;
 
+    //头像
+    private String avatar;
+
     /**
      * 邮箱
      */
