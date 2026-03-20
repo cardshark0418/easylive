@@ -30,4 +30,19 @@ public class Constants {
     public static final String  VIDEO_CODE_TEMP_FILE_SUFFIX= "_temp";
     public static final Integer  PAGE_SIZE_15 = 15;
     public static final String REDIS_KEY_QUEUE_VIDEO_PLAY = REDIS_KEY_PREFIX + "queue:video:play:";
+
+    public static final String REDIS_KEY_VIDEO_PLAY_COUNT_ONLINE_PREIFX = REDIS_KEY_PREFIX + "video:play:online:";
+
+    public static final String REDIS_KEY_VIDEO_PLAY_COUNT_ONLINE = REDIS_KEY_VIDEO_PLAY_COUNT_ONLINE_PREIFX + "count:%s";
+
+    public static final String REDIS_KEY_VIDEO_PLAY_COUNT_USER_PREFIX = "user:";
+
+    public static final String REDIS_KEY_VIDEO_PLAY_COUNT_USER = REDIS_KEY_VIDEO_PLAY_COUNT_ONLINE_PREIFX + REDIS_KEY_VIDEO_PLAY_COUNT_USER_PREFIX + "%s:%s";
+    public static final Integer REDIS_KEY_EXPIRES_ONE_SECONDS = 1000;
+
+
+    public static final String REDIS_KEY_TOKEN_WEB = REDIS_KEY_PREFIX + "token:web:";
+
+    public static final Integer REDIS_KEY_EXPIRES_DAY = ONE_MIN_MILLS * 60 * 24;
+
 }

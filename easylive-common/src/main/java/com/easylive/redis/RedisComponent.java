@@ -7,12 +7,15 @@ import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.VideoInfoFilePost;
 import com.easylive.entity.vo.SysSettingDto;
 import com.easylive.entity.vo.UploadingFileDto;
+import com.easylive.entity.vo.UserLoginDto;
 import com.easylive.entity.vo.VideoPlayInfoDto;
 import com.easylive.enums.DateTimePatternEnum;
+import com.easylive.utils.CookieUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.util.Collections;
 import java.util.Date;
@@ -92,5 +95,43 @@ public class RedisComponent {
 
     public void addVideoPlay(VideoPlayInfoDto videoPlayInfoDto) {
         redisUtils.lpush(Constants.REDIS_KEY_QUEUE_VIDEO_PLAY, videoPlayInfoDto, null);
+    }
+
+    public UserLoginDto getTokenUserInfoDto(HttpServletRequest request){
+        String token = CookieUtil.getCookieToken(request);
+        return (UserLoginDto) redisUtils.get(Constants.REDIS_KEY_LOGIN_TOKEN + token);
+    }
+
+    public Integer reportVideoPlayOnline(String fileId, String deviceId) {
+        String userPlayOnlineKey = String.format(Constants.REDIS_KEY_VIDEO_PLAY_COUNT_USER, fileId, deviceId);
+        String playOnlineCountKey = String.format(Constants.REDIS_KEY_VIDEO_PLAY_COUNT_ONLINE, fileId);
+
+        if (!redisUtils.keyExists(userPlayOnlineKey)) {//如果redis中这个用户对这个视频没有观看状态
+            redisUtils.setex(userPlayOnlineKey, fileId, Constants.REDIS_KEY_EXPIRES_ONE_SECONDS * 8);
+            return redisUtils.incrementex(playOnlineCountKey, Constants.REDIS_KEY_EXPIRES_ONE_SECONDS * 10).intValue();
+        }
+        //给视频在线总数量续期
+        redisUtils.expire(playOnlineCountKey, Constants.REDIS_KEY_EXPIRES_ONE_SECONDS * 10);
+        //给播放用户续期
+        redisUtils.expire(userPlayOnlineKey, Constants.REDIS_KEY_EXPIRES_ONE_SECONDS * 8);
+        Integer count = (Integer) redisUtils.get(playOnlineCountKey);
+        return count == null ? 1 : count;
+    }
+
+    public void updateTokenInfo(UserLoginDto tokenUserInfoDto) {
+        redisUtils.setex(Constants.REDIS_KEY_TOKEN_WEB + tokenUserInfoDto.getToken(), tokenUserInfoDto, Constants.REDIS_KEY_EXPIRES_DAY * 7);
+    }
+
+    public void addKeywordCount(String keyword) {
+        redisUtils.zaddCount(Constants.REDIS_KEY_VIDEO_SEARCH_COUNT, keyword);
+    }
+
+    public List<Object> getKeywordTop(Integer top) {
+        return redisUtils.getZSetList(Constants.REDIS_KEY_VIDEO_SEARCH_COUNT, top - 1);
+    }
+
+    public void recordVideoPlayCount(String videoId) {
+        String date = DateUtil.format(new Date(), DateTimePatternEnum.YYYY_MM_DD.getPattern());
+        redisUtils.incrementex(Constants.REDIS_KEY_VIDEO_PLAY_COUNT + date + ":" + videoId, Constants.REDIS_KEY_EXPIRES_DAY * 2L);
     }
 }

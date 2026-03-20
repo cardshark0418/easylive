@@ -2,17 +2,27 @@ package com.easylive.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.easylive.entity.constants.Constants;
+import com.easylive.entity.po.UserFocus;
 import com.easylive.entity.po.UserInfo;
+import com.easylive.entity.po.VideoInfo;
+import com.easylive.entity.vo.CountInfoDto;
 import com.easylive.entity.vo.UserLoginDto;
+import com.easylive.enums.ResponseCodeEnum;
 import com.easylive.exception.BusinessException;
+import com.easylive.mapper.UserFocusMapper;
 import com.easylive.mapper.UserInfoMapper;
+import com.easylive.mapper.VideoInfoMapper;
+import com.easylive.redis.RedisComponent;
 import com.easylive.redis.RedisUtils;
 import com.easylive.service.UserInfoService;
 import com.easylive.utils.CookieUtil;
+import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import javax.servlet.http.HttpServletResponse;
@@ -25,6 +35,12 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper,UserInfo> im
     private UserInfoMapper userInfoMapper;
     @Autowired
     private RedisUtils redisUtils;
+    @Autowired
+    private VideoInfoMapper videoInfoMapper;
+    @Autowired
+    private UserFocusMapper userFocusMapper;
+    @Autowired
+    private RedisComponent redisComponent;
 
     @Override
     public void register(String email, String nickName, String password) {
@@ -73,5 +89,65 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper,UserInfo> im
         //设置cookie
         CookieUtil.setToken2Cookie(response,token);
         return userLoginDto;
+    }
+
+    @Override
+    public UserInfo getUserDetailInfo(String currentUserId, String userId) {
+        UserInfo userInfo = getById(userId);
+        if (null == userInfo) {
+            throw new BusinessException(ResponseCodeEnum.CODE_404);
+        }
+        CountInfoDto countInfoDto = videoInfoMapper.selectJoinOne(CountInfoDto.class,
+                new MPJLambdaWrapper<VideoInfo>()
+                        .selectSum(VideoInfo::getPlayCount, CountInfoDto::getPlayCount)
+                        .selectSum(VideoInfo::getLikeCount, CountInfoDto::getLikeCount)
+                        .eq(VideoInfo::getUserId, userId));
+        BeanUtil.copyProperties(countInfoDto, userInfo);
+
+        Integer fansCount = Math.toIntExact(userFocusMapper.selectCount(new LambdaQueryWrapper<UserFocus>().eq(UserFocus::getFocusUserId, userId)));
+        Integer focusCount = Math.toIntExact(userFocusMapper.selectCount(new LambdaQueryWrapper<UserFocus>().eq(UserFocus::getUserId, userId)));
+        userInfo.setFansCount(fansCount);
+        userInfo.setFocusCount(focusCount);
+
+        if (currentUserId == null) {
+            userInfo.setHaveFocus(false);
+        } else {
+            Boolean userFocus = userFocusMapper.exists(new LambdaQueryWrapper<UserFocus>()
+                    .eq(UserFocus::getFocusUserId,userId)
+                    .eq(UserFocus::getUserId,currentUserId));
+            userInfo.setHaveFocus(userFocus);
+        }
+        return userInfo;
+    }
+
+    @Override
+    @Transactional
+    public void updateUserInfo(UserInfo userInfo, UserLoginDto tokenUserInfoDto) {
+        UserInfo dbInfo = this.userInfoMapper.selectById(userInfo.getUserId());
+        if (!dbInfo.getNickName().equals(userInfo.getNickName()) && dbInfo.getCurrentCoinCount() < Constants.UPDATE_NICK_NAME_COIN) {
+            throw new BusinessException("硬币不足，无法修改昵称");
+        }
+        if (!dbInfo.getNickName().equals(userInfo.getNickName())) {
+            Integer count = this.userInfoMapper.update(null,new LambdaUpdateWrapper<UserInfo>()
+                    .eq(UserInfo::getUserId,userInfo.getUserId())
+                    .setSql("coin_count = coin_count - " + Constants.UPDATE_NICK_NAME_COIN.toString()));
+            if (count == 0) {
+                throw new BusinessException("硬币不足，无法修改昵称");
+            }
+        }
+        this.userInfoMapper.updateById(userInfo);
+
+        Boolean updateTokenInfo = false;
+        if (!userInfo.getAvatar().equals(tokenUserInfoDto.getAvatar())) {
+            tokenUserInfoDto.setAvatar(userInfo.getAvatar());
+            updateTokenInfo = true;
+        }
+        if (!tokenUserInfoDto.getNickName().equals(userInfo.getNickName())) {
+            tokenUserInfoDto.setNickName(userInfo.getNickName());
+            updateTokenInfo = true;
+        }
+        if (updateTokenInfo) {
+            redisComponent.updateTokenInfo(tokenUserInfoDto);
+        }
     }
 }

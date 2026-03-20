@@ -16,10 +16,15 @@ public class AppConfig {
     @Value("${project.folder:}")
     private String projectFolder;
 
+    @Getter
     @Value("${showFFmegLog:true}")
     private Boolean showFFmpegLog;
 
-    public Boolean getShowFFmpegLog() {
-        return showFFmpegLog;
-    }
+    @Value("${es.host.port:127.0.0.1:9200}")
+    private String esHostPort;
+
+    @Value("${es.index.video.name:easylive_video}")
+    private String esIndexVideoName;
 }
+
+

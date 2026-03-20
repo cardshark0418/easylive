@@ -1,6 +1,7 @@
 package com.easylive.entity.po;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -101,5 +102,16 @@ public class UserInfo implements Serializable {
      * 主题
      */
     private Integer theme;
+
+    @TableField(exist = false)
+    private Integer fansCount;
+    @TableField(exist = false)
+    private Integer focusCount;
+    @TableField(exist = false)
+    private Integer likeCount;
+    @TableField(exist = false)
+    private Integer playCount;
+    @TableField(exist = false)
+    private Boolean haveFocus;
 
 }

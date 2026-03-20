@@ -39,7 +39,7 @@
         <commons.io.version>2.5</commons.io.version>
         <lombok.version>1.18.22</lombok.version>
         <captcha.verion>1.6.2</captcha.verion>
-        <es.version>3.3.2</es.version>
+        <elasticsearch.version>7.17.10</elasticsearch.version>
     </properties>
 
     <dependencyManagement>
@@ -53,16 +53,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
                 <version>${springboot.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-classic</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>ch.qos.logback</groupId>
-                        <artifactId>logback-core</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
@@ -126,7 +116,6 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-                <version>${es.version}</version>
             </dependency>
 
             <dependency>

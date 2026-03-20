@@ -6,16 +6,17 @@ import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.VideoInfoFilePost;
 import com.easylive.entity.po.VideoInfoPost;
 import com.easylive.entity.query.VideoInfoPostQuery;
-import com.easylive.entity.vo.PaginationResultVO;
-import com.easylive.entity.vo.ResponseVO;
-import com.easylive.entity.vo.UserLoginDto;
-import com.easylive.entity.vo.VideoStatusCountInfoVO;
+import com.easylive.entity.vo.*;
+import com.easylive.enums.ResponseCodeEnum;
 import com.easylive.enums.VideoStatusEnum;
+import com.easylive.exception.BusinessException;
+import com.easylive.redis.RedisComponent;
 import com.easylive.redis.RedisUtils;
 import com.easylive.service.VideoInfoFilePostService;
 import com.easylive.service.VideoInfoPostService;
 import com.easylive.service.VideoInfoService;
 import com.easylive.utils.CookieUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,6 +45,9 @@ public class UCenterVideoPostController{
 
     @Resource
     private RedisUtils redisUtils;
+
+    @Autowired
+    private RedisComponent redisComponent;
 
     @RequestMapping("/postVideo")
 //    @GlobalInterceptor(checkLogin = true)
@@ -118,5 +122,40 @@ public class UCenterVideoPostController{
         countInfo.setAuditFailCount(auditFailCount);
         countInfo.setInProgress(inProgress);
         return getSuccessResponseVO(countInfo);
+    }
+
+    @RequestMapping("/getVideoByVideoId")
+//    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO getVideoByVideoId(@NotEmpty String videoId,HttpServletRequest request) {
+        UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
+        VideoInfoPost videoInfoPost = this.videoInfoPostService.getById(videoId);
+        if (videoInfoPost == null || !videoInfoPost.getUserId().equals(tokenUserInfoDto.getUserId())) {
+            throw new BusinessException(ResponseCodeEnum.CODE_404);
+        }
+
+        List<VideoInfoFilePost> videoInfoFilePostList = this.videoInfoFilePostService.list(new LambdaQueryWrapper<VideoInfoFilePost>()
+                .eq(VideoInfoFilePost::getVideoId,videoId)
+                .orderByAsc(VideoInfoFilePost::getFileIndex));
+        VideoPostEditInfoVo vo = new VideoPostEditInfoVo();
+        vo.setVideoInfo(videoInfoPost);
+        vo.setVideoInfoFileList(videoInfoFilePostList);
+        return getSuccessResponseVO(vo);
+    }
+
+    @RequestMapping("/saveVideoInteraction")
+//    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO saveVideoInteraction(@NotEmpty String videoId, String interaction,HttpServletRequest request) {
+        UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
+        videoInfoService.changeInteraction(videoId, tokenUserInfoDto.getUserId(), interaction);
+        return getSuccessResponseVO(null);
+    }
+
+    @RequestMapping("/deleteVideo")
+//    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO deleteVideo(@NotEmpty String videoId,HttpServletRequest request) {
+        UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
+
+        videoInfoService.deleteVideo(videoId, tokenUserInfoDto.getUserId());
+        return getSuccessResponseVO(null);
     }
 }

@@ -12,4 +12,8 @@ public interface UserInfoService extends IService<UserInfo> {
     void register(String email, String nickName, String password);
 
     UserLoginDto login(@NotEmpty @Email String email, @NotEmpty String password, String ip, HttpServletResponse response);
+
+    UserInfo getUserDetailInfo(String s, @NotEmpty String userId);
+
+    void updateUserInfo(UserInfo userInfo, UserLoginDto tokenUserInfoDto);
 }

@@ -1,5 +1,8 @@
 package com.easylive.entity.po;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,6 +22,7 @@ public class VideoComment implements Serializable {
     /**
      * 评论ID
      */
+    @TableId(type = IdType.AUTO)
     private Integer commentId;
 
     /**
@@ -78,18 +82,25 @@ public class VideoComment implements Serializable {
      */
     private Integer hateCount;
 
+    @TableField(exist = false)
     private List<VideoComment> children;
 
+    @TableField(exist = false)
     private String nickName;
 
+    @TableField(exist = false)
     private String avatar;
 
+    @TableField(exist = false)
     private String replyNickName;
 
+    @TableField(exist = false)
     private String replyAvatar;
 
+    @TableField(exist = false)
     private String videoName;
 
+    @TableField(exist = false)
     private String videoCover;
 
 

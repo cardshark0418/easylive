@@ -3,7 +3,9 @@ package com.easylive.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.easylive.component.EsSearchComponent;
 import com.easylive.entity.constants.Constants;
+import com.easylive.entity.po.UserAction;
 import com.easylive.entity.po.UserInfo;
 import com.easylive.entity.po.VideoInfo;
 import com.easylive.entity.po.VideoInfoFile;
@@ -12,10 +14,13 @@ import com.easylive.entity.vo.ResponseVO;
 import com.easylive.entity.vo.UserLoginDto;
 import com.easylive.entity.vo.VideoInfoResultVo;
 import com.easylive.enums.ResponseCodeEnum;
+import com.easylive.enums.SearchOrderTypeEnum;
+import com.easylive.enums.UserActionTypeEnum;
 import com.easylive.enums.VideoRecommendTypeEnum;
 import com.easylive.exception.BusinessException;
 import com.easylive.redis.RedisComponent;
 import com.easylive.redis.RedisUtils;
+import com.easylive.service.UserActionService;
 import com.easylive.service.VideoInfoFileService;
 import com.easylive.service.VideoInfoService;
 import com.easylive.utils.CookieUtil;
@@ -29,7 +34,10 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.NotEmpty;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.easylive.entity.vo.ResponseVO.getSuccessResponseVO;
 
@@ -51,6 +59,12 @@ public class VideoController {
 
     @Autowired
     private RedisUtils redisUtils;
+
+    @Autowired
+    private UserActionService userActionService;
+
+    @Resource
+    private EsSearchComponent esSearchComponent;
 
 
     @RequestMapping("/loadRecommendVideo")
@@ -92,34 +106,71 @@ public class VideoController {
             throw new BusinessException(ResponseCodeEnum.CODE_404);
         }
         String token = CookieUtil.getCookieToken(request);
-        UserLoginDto tokenUserInfoDto = (UserLoginDto) redisUtils.get(Constants.REDIS_KEY_LOGIN_TOKEN + token);
-//todo 获取用户行为
+        UserLoginDto userInfoDto = (UserLoginDto) redisUtils.get(Constants.REDIS_KEY_LOGIN_TOKEN + token);
 
-//        List<UserAction> userActionList = new ArrayList<>();
-//        if (userInfoDto != null) {
-//            UserActionQuery actionQuery = new UserActionQuery();
-//            actionQuery.setVideoId(videoId);
-//            actionQuery.setUserId(userInfoDto.getUserId());
-//            actionQuery.setActionTypeArray(new Integer[]{UserActionTypeEnum.VIDEO_LIKE.getType(), UserActionTypeEnum.VIDEO_COLLECT.getType(),
-//                    UserActionTypeEnum.VIDEO_COIN.getType(),});
-//            userActionList = userActionService.findListByParam(actionQuery);
-//        }
+        List<UserAction> userActionList = new ArrayList<>();
+        if (userInfoDto != null) {
+            userActionList = userActionService.list(new LambdaQueryWrapper<UserAction>()
+                    .eq(UserAction::getVideoId,videoId)
+                    .eq(UserAction::getUserId,userInfoDto.getUserId())
+                    .in(UserAction::getActionType, (Object[]) new Integer[]{UserActionTypeEnum.VIDEO_LIKE.getType(), UserActionTypeEnum.VIDEO_COLLECT.getType(),
+                            UserActionTypeEnum.VIDEO_COIN.getType(),}));
+        }
         VideoInfoResultVo resultVo = new VideoInfoResultVo();
         resultVo.setVideoInfo(videoInfo);
-//        resultVo.setUserActionList(userActionList);
+        resultVo.setUserActionList(userActionList);
         return getSuccessResponseVO(resultVo);
     }
 
     @RequestMapping("/loadVideoPList")
 //    @GlobalInterceptor
     public ResponseVO loadVideoPList(@NotEmpty String videoId) {
-//        VideoInfoFileQuery videoInfoQuery = new VideoInfoFileQuery();
-//        videoInfoQuery.setVideoId(videoId);
-//        videoInfoQuery.setOrderBy("file_index asc");
-//        List<VideoInfoFile> fileList = videoInfoFileService.findListByParam(videoInfoQuery);
         List<VideoInfoFile> fileList = videoInfoFileService.list(new LambdaQueryWrapper<VideoInfoFile>()
                 .eq(VideoInfoFile::getVideoId, videoId)
                 .orderByAsc(VideoInfoFile::getFileIndex));
         return getSuccessResponseVO(fileList);
+    }
+
+    @RequestMapping("/reportVideoPlayOnline")
+//    @GlobalInterceptor
+    public ResponseVO reportVideoPlayOnline(@NotEmpty String fileId, String deviceId) {
+        Integer count = redisComponent.reportVideoPlayOnline(fileId, deviceId);
+        return getSuccessResponseVO(count);
+    }
+
+    @RequestMapping("/search")
+//    @GlobalInterceptor
+    public ResponseVO search(@NotEmpty String keyword, Integer orderType, Integer pageNo) {
+        redisComponent.addKeywordCount(keyword);
+        PaginationResultVO resultVO = esSearchComponent.search(true, keyword, orderType, pageNo, 30);
+        return getSuccessResponseVO(resultVO);
+    }
+
+    @RequestMapping("/getVideoRecommend")
+//    @GlobalInterceptor
+    public ResponseVO getVideoRecommend(@NotEmpty String keyword, @NotEmpty String videoId) {
+        List<VideoInfo> videoInfoList = esSearchComponent.search(false, keyword, SearchOrderTypeEnum.VIDEO_PLAY.getType(), 1, 10).getList();
+        videoInfoList = videoInfoList.stream().filter(item -> !item.getVideoId().equals(videoId)).collect(Collectors.toList());
+        return getSuccessResponseVO(videoInfoList);
+    }
+
+    @RequestMapping("/getSearchKeywordTop")
+//    @GlobalInterceptor
+    public ResponseVO getSearchKeywordTop() {
+        List<Object> keywordList = redisComponent.getKeywordTop(10);
+        return getSuccessResponseVO(keywordList);
+    }
+
+    @RequestMapping("/loadHotVideoList")
+//    @GlobalInterceptor
+    public ResponseVO loadHotVideoList(Integer pageNo) {
+        pageNo=(pageNo==null || pageNo<=0)?1:pageNo;
+        Page<VideoInfo> videoInfoPage = videoInfoService.selectJoinListPage(new Page<>(pageNo, 15), VideoInfo.class, new MPJLambdaWrapper<VideoInfo>()
+                .orderByDesc("play_count")
+                .leftJoin(UserInfo.class, UserInfo::getUserId, VideoInfo::getUserId)
+                .selectAll(VideoInfo.class)
+                .select(UserInfo::getNickName, UserInfo::getAvatar)
+                .gt(VideoInfo::getCreateTime, LocalDateTime.now().minusHours(24)));
+        return getSuccessResponseVO(new PaginationResultVO<>((int) videoInfoPage.getTotal(),15,pageNo,videoInfoPage.getRecords()));
     }
 }

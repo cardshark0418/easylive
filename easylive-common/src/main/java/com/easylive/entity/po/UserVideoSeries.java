@@ -9,44 +9,31 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+
 
 /**
- * 用户行为 点赞、评论
+ * 用户视频序列归档
  */
 @Data
-public class UserAction implements Serializable {
+public class UserVideoSeries implements Serializable {
 
 
     /**
-     * 自增ID
+     * 列表ID
      */
     @TableId(type = IdType.AUTO)
-    private Integer actionId;
+    private Integer seriesId;
 
     /**
-     * 视频ID
+     * 列表名称
      */
-    private String videoId;
+    private String seriesName;
 
     /**
-     * 视频用户ID
+     * 描述
      */
-    private String videoUserId;
-
-    /**
-     * 评论ID
-     */
-    private Integer commentId;
-
-    /**
-     * 0:评论喜欢点赞 1:讨厌评论 2:视频点赞 3:视频收藏 4:视频投币
-     */
-    private Integer actionType;
-
-    /**
-     * 数量
-     */
-    private Integer actionCount;
+    private String seriesDescription;
 
     /**
      * 用户ID
@@ -54,15 +41,24 @@ public class UserAction implements Serializable {
     private String userId;
 
     /**
-     * 操作时间
+     * 排序
+     */
+    private Integer sort;
+
+    /**
+     * 更新时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private Date actionTime;
+    private Date updateTime;
 
     @TableField(exist = false)
-    private String videoName;
+    private String cover;
 
+    /**
+     * 专题下的视频
+     */
     @TableField(exist = false)
-    private String videoCover;
+    private List<VideoInfo> videoInfoList;
+
 }

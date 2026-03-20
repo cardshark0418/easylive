@@ -5,6 +5,7 @@ import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.easylive.component.EsSearchComponent;
 import com.easylive.config.AppConfig;
 import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.*;
@@ -67,6 +68,8 @@ public class VideoInfoPostServiceImpl extends ServiceImpl<VideoInfoPostMapper,Vi
     private VideoInfoFileMapper videoInfoFileMapper;
     @Autowired
     private VideoInfoFileService videoInfoFileService;
+    @Autowired
+    private EsSearchComponent esSearchComponent;
     @Override
     public void saveVideoInfo(VideoInfoPost videoInfoPost, List<VideoInfoFilePost> uploadFileList) {
         //文件数量是否超出上限
@@ -317,7 +320,8 @@ public class VideoInfoPostServiceImpl extends ServiceImpl<VideoInfoPostMapper,Vi
         videoInfoService.saveOrUpdate(videoInfo);
 
         //删除可能存在正式表信息 再加
-        videoInfoFileMapper.deleteById(videoId);
+        videoInfoFileMapper.delete(new LambdaQueryWrapper<VideoInfoFile>()
+                .eq(VideoInfoFile::getVideoId, videoId));
 
         List<VideoInfoFilePost> videoInfoFilePostList = videoInfoFilePostMapper.selectList(new LambdaQueryWrapper<VideoInfoFilePost>()
                 .eq(VideoInfoFilePost::getVideoId, videoId));
@@ -340,7 +344,8 @@ public class VideoInfoPostServiceImpl extends ServiceImpl<VideoInfoPostMapper,Vi
             }
         }
         redisComponent.cleanDelFileList(videoId);
-        //todo 保存到es
+
+        esSearchComponent.saveDoc(videoInfo);
     }
 
     public static void union(String dirPath, String toFilePath, boolean delSource) throws BusinessException {
