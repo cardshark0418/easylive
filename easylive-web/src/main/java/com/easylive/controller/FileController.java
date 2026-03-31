@@ -6,6 +6,7 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.servlet.ServletUtil;
+import com.easylive.annotation.GlobalInterceptor;
 import com.easylive.config.AppConfig;
 import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.VideoInfoFile;
@@ -79,6 +80,7 @@ public class FileController {
     }
 
     // 预上传
+    @GlobalInterceptor(checkLogin = true)
     @RequestMapping("/preUploadVideo")
     public ResponseVO preUploadVideo(@NotEmpty String fileName, @NotNull Integer chunks, HttpServletRequest request) {
         String token = CookieUtil.getCookieToken(request);
@@ -88,6 +90,7 @@ public class FileController {
     }
 
     @RequestMapping("/uploadVideo")
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO uploadVideo(@NotNull MultipartFile chunkFile,@NotNull Integer chunkIndex, @NotEmpty String uploadId,HttpServletRequest request) throws IOException {
         String token = CookieUtil.getCookieToken(request);
         UserLoginDto userLoginDto = (UserLoginDto) redisUtils.get(Constants.REDIS_KEY_LOGIN_TOKEN + token);
@@ -114,6 +117,7 @@ public class FileController {
     }
 
     @RequestMapping("/delUploadVideo")
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO delUploadVideo(@NotEmpty String uploadId ,HttpServletRequest request) throws IOException {
         //获取用户id
         String token = CookieUtil.getCookieToken(request);
@@ -130,7 +134,7 @@ public class FileController {
     }
 
     @RequestMapping("/uploadImage")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO uploadCover(@NotNull MultipartFile file, @NotNull Boolean createThumbnail) throws IOException {
         String month = DateUtil.format(new Date(), DateTimePatternEnum.YYYYMM.getPattern());
         String folder = appConfig.getProjectFolder() + "file/cover/" + month;
@@ -159,7 +163,7 @@ public class FileController {
     }
 
     @RequestMapping("/videoResource/{fileId}")
-//    @GlobalInterceptor
+    @GlobalInterceptor
     public void getVideoResource(HttpServletResponse response,HttpServletRequest request, @PathVariable @NotEmpty String fileId) {
         VideoInfoFile videoInfoFile = videoInfoFileService.getById(fileId);
         String filePath = videoInfoFile.getFilePath();
@@ -178,7 +182,7 @@ public class FileController {
     }
 
     @RequestMapping("/videoResource/{fileId}/{ts}")
-//    @GlobalInterceptor
+    @GlobalInterceptor
     public void getVideoResourceTs(HttpServletResponse response, @PathVariable @NotEmpty String fileId, @PathVariable @NotNull String ts) {
         VideoInfoFile videoInfoFile = videoInfoFileService.getById(fileId);
         String filePath = videoInfoFile.getFilePath();

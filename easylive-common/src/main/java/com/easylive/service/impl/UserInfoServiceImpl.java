@@ -3,7 +3,6 @@ package com.easylive.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.UserFocus;
 import com.easylive.entity.po.UserInfo;
@@ -19,6 +18,7 @@ import com.easylive.redis.RedisComponent;
 import com.easylive.redis.RedisUtils;
 import com.easylive.service.UserInfoService;
 import com.easylive.utils.CookieUtil;
+import com.github.yulichang.base.MPJBaseServiceImpl;
 import com.github.yulichang.wrapper.MPJLambdaWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,7 +30,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service("userInfoService")
-public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper,UserInfo> implements UserInfoService{
+public class UserInfoServiceImpl extends MPJBaseServiceImpl<UserInfoMapper,UserInfo> implements UserInfoService{
     @Autowired
     private UserInfoMapper userInfoMapper;
     @Autowired
@@ -84,8 +84,10 @@ public class UserInfoServiceImpl extends ServiceImpl<UserInfoMapper,UserInfo> im
         String token = UUID.randomUUID().toString();
         userLoginDto.setExpireAt((System.currentTimeMillis()+Constants.ONE_MIN_MILLS*60*24*7));
         userLoginDto.setToken(token);
+        userLoginDto.setStatus(1);
         //token存储到redis
         redisUtils.setex(Constants.REDIS_KEY_LOGIN_TOKEN+token,userLoginDto,  Constants.ONE_MIN_MILLS  *60*24*7);
+        redisUtils.setex(Constants.REDIS_KEY_USER_TOKEN + userLoginDto.getUserId(), token, Constants.ONE_MIN_MILLS  *60*24*7);
         //设置cookie
         CookieUtil.setToken2Cookie(response,token);
         return userLoginDto;

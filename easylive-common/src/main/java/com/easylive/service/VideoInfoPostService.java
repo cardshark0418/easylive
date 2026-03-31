@@ -25,4 +25,5 @@ public interface VideoInfoPostService extends IService<VideoInfoPost> {
 
     void auditVideo(@NotEmpty String videoId, @NotNull Integer status, String reason);
 
+    void recommendVideo(@NotEmpty String videoId);
 }

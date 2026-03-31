@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.CategoryInfo;
+import com.easylive.entity.po.VideoInfo;
 import com.easylive.exception.BusinessException;
 import com.easylive.mapper.CategoryInfoMapper;
 import com.easylive.redis.RedisUtils;
 import com.easylive.service.CategoryInfoService;
+import com.easylive.service.VideoInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,8 @@ public class CategoryInfoServiceImpl extends ServiceImpl<CategoryInfoMapper, Cat
     private CategoryInfoMapper categoryInfoMapper;
     @Autowired
     private RedisUtils redisUtils;
+    @Autowired
+    private VideoInfoService videoInfoService;
 
     @Override
     public void saveCategory(CategoryInfo categoryInfo) {
@@ -51,7 +55,13 @@ public class CategoryInfoServiceImpl extends ServiceImpl<CategoryInfoMapper, Cat
 
     @Override
     public void delCategory(Integer categoryId) {
-        //TODO 检查分类下视频是否被删掉
+        Integer count = Math.toIntExact(videoInfoService.count(new LambdaQueryWrapper<VideoInfo>()
+                .eq(VideoInfo::getCategoryId,categoryId)
+                .or()
+                .eq(VideoInfo::getPCategoryId,categoryId)));
+        if (count > 0) {
+            throw new BusinessException("分类下有视频信息，无法删除");
+        }
         remove(new LambdaQueryWrapper<CategoryInfo>().eq(CategoryInfo::getCategoryId,categoryId)
                 .or()
                 .eq(CategoryInfo::getPCategoryId,categoryId));

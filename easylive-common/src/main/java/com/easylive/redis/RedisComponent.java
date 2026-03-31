@@ -20,6 +20,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class RedisComponent {
@@ -119,7 +120,7 @@ public class RedisComponent {
     }
 
     public void updateTokenInfo(UserLoginDto tokenUserInfoDto) {
-        redisUtils.setex(Constants.REDIS_KEY_TOKEN_WEB + tokenUserInfoDto.getToken(), tokenUserInfoDto, Constants.REDIS_KEY_EXPIRES_DAY * 7);
+        redisUtils.setex(Constants.REDIS_KEY_LOGIN_TOKEN + tokenUserInfoDto.getToken(), tokenUserInfoDto, Constants.REDIS_KEY_EXPIRES_DAY * 7);
     }
 
     public void addKeywordCount(String keyword) {
@@ -133,5 +134,13 @@ public class RedisComponent {
     public void recordVideoPlayCount(String videoId) {
         String date = DateUtil.format(new Date(), DateTimePatternEnum.YYYY_MM_DD.getPattern());
         redisUtils.incrementex(Constants.REDIS_KEY_VIDEO_PLAY_COUNT + date + ":" + videoId, Constants.REDIS_KEY_EXPIRES_DAY * 2L);
+    }
+
+    public Map<String, Object> getVideoPlayCount(String date) {
+        return redisUtils.getBatch(Constants.REDIS_KEY_VIDEO_PLAY_COUNT + date);
+    }
+
+    public void saveSettingDto(SysSettingDto sysSettingDto) {
+        redisUtils.set(Constants.REDIS_KEY_SYS_SETTING, sysSettingDto);
     }
 }

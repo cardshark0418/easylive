@@ -2,6 +2,7 @@ package com.easylive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.easylive.annotation.GlobalInterceptor;
 import com.easylive.entity.po.UserInfo;
 import com.easylive.entity.po.VideoComment;
 import com.easylive.entity.po.VideoDanmu;
@@ -29,6 +30,7 @@ import static com.easylive.entity.vo.ResponseVO.getSuccessResponseVO;
 @RestController
 @Validated
 @RequestMapping("/ucenter")
+@GlobalInterceptor(checkLogin = true)
 public class UCenterInteractController{
 
     @Resource

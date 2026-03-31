@@ -11,7 +11,9 @@ import com.easylive.redis.RedisComponent;
 import com.easylive.redis.RedisUtils;
 import com.easylive.service.VideoInfoPostService;
 import com.easylive.service.VideoInfoService;
+import com.easylive.service.VideoPlayHistoryService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +37,8 @@ public class ExecuteQueueTask {
     private RedisComponent redisComponent;
     @Resource
     private EsSearchComponent esSearchComponent;
+    @Autowired
+    private VideoPlayHistoryService videoPlayHistoryService;
 
     private ExecutorService executorService = Executors.newFixedThreadPool(2);
 
@@ -88,10 +92,10 @@ public class ExecuteQueueTask {
                     videoInfoService.update(new LambdaUpdateWrapper<VideoInfo>()
                             .setSql("play_count = play_count + 1")
                             .eq(VideoInfo::getVideoId,videoPlayInfoDto.getVideoId()));
-//                    if (!StringUtils.isEmpty(videoPlayInfoDto.getUserId())) {todo
-//                        //记录历史
-//                        videoPlayHistoryService.saveHistory(videoPlayInfoDto.getUserId(), videoPlayInfoDto.getVideoId(), videoPlayInfoDto.getFileIndex());
-//                    }
+                    if (!StringUtils.isEmpty(videoPlayInfoDto.getUserId())) {
+                        //记录历史
+                        videoPlayHistoryService.saveHistory(videoPlayInfoDto.getUserId(), videoPlayInfoDto.getVideoId(), videoPlayInfoDto.getFileIndex());
+                    }
                     //按天记录播放数
                     redisComponent.recordVideoPlayCount(videoPlayInfoDto.getVideoId());
 

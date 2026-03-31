@@ -1,6 +1,7 @@
 package com.easylive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.easylive.annotation.GlobalInterceptor;
 import com.easylive.entity.po.VideoDanmu;
 import com.easylive.entity.po.VideoInfo;
 import com.easylive.entity.vo.ResponseVO;
@@ -39,7 +40,7 @@ public class VideoDanmuController {
     private RedisComponent redisComponent;
 
     @RequestMapping("/postDanmu")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO postDanmu(@NotEmpty String videoId,
                                 @NotEmpty String fileId,
                                 @NotEmpty @Size(max = 200) String text,

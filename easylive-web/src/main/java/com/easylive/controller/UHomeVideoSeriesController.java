@@ -1,6 +1,7 @@
 package com.easylive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.easylive.annotation.GlobalInterceptor;
 import com.easylive.entity.po.UserVideoSeries;
 import com.easylive.entity.po.UserVideoSeriesVideo;
 import com.easylive.entity.po.VideoInfo;
@@ -71,7 +72,7 @@ public class UHomeVideoSeriesController {
      * @return
      */
     @RequestMapping("/saveVideoSeries")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO saveVideoSeries(Integer seriesId,
                                       @NotEmpty @Size(max = 100) String seriesName,
                                       @Size(max = 200) String seriesDescription,
@@ -88,7 +89,7 @@ public class UHomeVideoSeriesController {
     }
 
     @RequestMapping("/loadAllVideo")
-//    @GlobalInterceptor(checkLogin = true) // 建议开启，保护 userId 不为空
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO loadAllVideo(Integer seriesId, HttpServletRequest request) {
         UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
         LambdaQueryWrapper<VideoInfo> wrapper = new LambdaQueryWrapper<VideoInfo>().eq(VideoInfo::getUserId, tokenUserInfoDto.getUserId());
@@ -127,7 +128,7 @@ public class UHomeVideoSeriesController {
      * @return
      */
     @RequestMapping("/saveSeriesVideo")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO saveSeriesVideo(@NotNull Integer seriesId, @NotEmpty String videoIds,HttpServletRequest request) {
         UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
         userVideoSeriesService.saveSeriesVideo(tokenUserInfoDto.getUserId(), seriesId, videoIds);
@@ -142,7 +143,7 @@ public class UHomeVideoSeriesController {
      * @return
      */
     @RequestMapping("/delSeriesVideo")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO delSeriesVideo(@NotNull Integer seriesId, @NotEmpty String videoId,HttpServletRequest request) {
         UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
         userVideoSeriesService.delSeriesVideo(tokenUserInfoDto.getUserId(), seriesId, videoId);
@@ -154,7 +155,7 @@ public class UHomeVideoSeriesController {
      *
      */
     @RequestMapping("/delVideoSeries")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO delVideoSeries(@NotNull Integer seriesId,HttpServletRequest request) {
         UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
         userVideoSeriesService.delVideoSeries(tokenUserInfoDto.getUserId(), seriesId);
@@ -175,7 +176,7 @@ public class UHomeVideoSeriesController {
     }
 
     @RequestMapping("/changeVideoSeriesSort")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO changeVideoSeriesSort(@NotEmpty String seriesIds,HttpServletRequest request) {
         UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
         userVideoSeriesService.changeVideoSeriesSort(tokenUserInfoDto.getUserId(), seriesIds);

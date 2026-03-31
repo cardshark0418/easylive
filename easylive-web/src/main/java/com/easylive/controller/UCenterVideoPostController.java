@@ -2,6 +2,7 @@ package com.easylive.controller;
 
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.easylive.annotation.GlobalInterceptor;
 import com.easylive.entity.constants.Constants;
 import com.easylive.entity.po.VideoInfoFilePost;
 import com.easylive.entity.po.VideoInfoPost;
@@ -33,6 +34,7 @@ import static com.easylive.entity.vo.ResponseVO.getSuccessResponseVO;
 @RestController
 @Validated
 @RequestMapping("/ucenter")
+@GlobalInterceptor(checkLogin = true)
 public class UCenterVideoPostController{
     @Resource
     private VideoInfoPostService videoInfoPostService;

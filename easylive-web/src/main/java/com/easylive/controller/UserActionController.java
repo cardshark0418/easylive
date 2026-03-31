@@ -1,7 +1,10 @@
 package com.easylive.controller;
 
+import com.easylive.annotation.GlobalInterceptor;
+import com.easylive.annotation.RecordUserMessage;
 import com.easylive.entity.po.UserAction;
 import com.easylive.entity.vo.ResponseVO;
+import com.easylive.enums.MessageTypeEnum;
 import com.easylive.redis.RedisComponent;
 import com.easylive.service.UserActionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +31,8 @@ public class UserActionController {
     private RedisComponent redisComponent;
 
     @RequestMapping("doAction")
-//    @RecordUserMessage(messageType = MessageTypeEnum.LIKE)
-//    @GlobalInterceptor(checkLogin = true)
+    @RecordUserMessage(messageType = MessageTypeEnum.LIKE)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO doAction(@NotEmpty String videoId,
                                @NotNull Integer actionType,
                                @Max(2) @Min(1) Integer actionCount,

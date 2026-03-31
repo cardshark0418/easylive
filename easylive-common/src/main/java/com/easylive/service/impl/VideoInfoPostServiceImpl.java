@@ -14,10 +14,7 @@ import com.easylive.entity.query.VideoInfoPostQuery;
 import com.easylive.entity.vo.PaginationResultVO;
 import com.easylive.entity.vo.SysSettingDto;
 import com.easylive.entity.vo.UploadingFileDto;
-import com.easylive.enums.ResponseCodeEnum;
-import com.easylive.enums.VideoFileTransferResultEnum;
-import com.easylive.enums.VideoFileUpdateTypeEnum;
-import com.easylive.enums.VideoStatusEnum;
+import com.easylive.enums.*;
 import com.easylive.exception.BusinessException;
 import com.easylive.mapper.*;
 import com.easylive.redis.RedisComponent;
@@ -404,5 +401,23 @@ public class VideoInfoPostServiceImpl extends ServiceImpl<VideoInfoPostMapper,Vi
 
         //删除视频文件
         videoFile.delete();
+    }
+
+    @Override
+    public void recommendVideo(String videoId) {
+        VideoInfo videoInfo = videoInfoMapper.selectById(videoId);
+        if (videoInfo == null) {
+            throw new BusinessException(ResponseCodeEnum.CODE_600);
+        }
+        Integer recommendType = null;
+        if (VideoRecommendTypeEnum.RECOMMEND.getType().equals(videoInfo.getRecommendType())) {
+            recommendType = VideoRecommendTypeEnum.NO_RECOMMEND.getType();
+        } else {
+            recommendType = VideoRecommendTypeEnum.RECOMMEND.getType();
+        }
+        VideoInfo updateInfo = new VideoInfo();
+        updateInfo.setRecommendType(recommendType);
+        updateInfo.setVideoId(videoId);
+        videoInfoMapper.updateById(updateInfo);
     }
 }

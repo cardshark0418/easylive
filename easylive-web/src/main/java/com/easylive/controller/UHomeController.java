@@ -2,6 +2,7 @@ package com.easylive.controller;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.easylive.annotation.GlobalInterceptor;
 import com.easylive.entity.po.UserAction;
 import com.easylive.entity.po.UserFocus;
 import com.easylive.entity.po.UserInfo;
@@ -61,7 +62,7 @@ public class UHomeController{
     }
 
     @RequestMapping("/updateUserInfo")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO updateUserInfo(@NotEmpty @Size(max = 20) String nickName,
                                      @NotEmpty @Size(max = 100) String avatar,
                                      @NotNull Integer sex, String birthday,
@@ -85,21 +86,21 @@ public class UHomeController{
     }
 
     @RequestMapping("/focus")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO focus(@NotEmpty String focusUserId,HttpServletRequest request) {
         userFocusService.focusUser(redisComponent.getTokenUserInfoDto(request).getUserId(), focusUserId);
         return getSuccessResponseVO(null);
     }
 
     @RequestMapping("/cancelFocus")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO cancelFocus(@NotEmpty String focusUserId,HttpServletRequest request) {
         userFocusService.cancelFocus(redisComponent.getTokenUserInfoDto(request).getUserId(), focusUserId);
         return getSuccessResponseVO(null);
     }
 
     @RequestMapping("/loadFocusList")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO loadFocusList(Integer pageNo,HttpServletRequest request) {
         pageNo = (pageNo == null || pageNo < 1) ? 1 : pageNo;
         UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
@@ -118,7 +119,7 @@ public class UHomeController{
     }
 
     @RequestMapping("/loadFansList")
-//    @GlobalInterceptor(checkLogin = true)
+    @GlobalInterceptor(checkLogin = true)
     public ResponseVO loadFansList(Integer pageNo,HttpServletRequest request) {
         pageNo = (pageNo == null || pageNo < 1) ? 1 : pageNo;
         UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);

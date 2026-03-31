@@ -1,6 +1,8 @@
 package com.easylive.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.easylive.annotation.GlobalInterceptor;
+import com.easylive.annotation.RecordUserMessage;
 import com.easylive.entity.po.UserAction;
 import com.easylive.entity.po.VideoComment;
 import com.easylive.entity.po.VideoInfo;
@@ -8,6 +10,7 @@ import com.easylive.entity.vo.PaginationResultVO;
 import com.easylive.entity.vo.ResponseVO;
 import com.easylive.entity.vo.UserLoginDto;
 import com.easylive.entity.vo.VideoCommentResultVO;
+import com.easylive.enums.MessageTypeEnum;
 import com.easylive.enums.UserActionTypeEnum;
 import com.easylive.redis.RedisComponent;
 import com.easylive.service.UserActionService;
@@ -50,8 +53,8 @@ public class VideoCommentController{
     private RedisComponent redisComponent;
 
     @RequestMapping("/postComment")
-//    @GlobalInterceptor(checkLogin = true)
-//    @RecordUserMessage(messageType = MessageTypeEnum.COMMENT)
+    @GlobalInterceptor(checkLogin = true)
+    @RecordUserMessage(messageType = MessageTypeEnum.COMMENT)
     public ResponseVO postComment(@NotEmpty String videoId,
                                   Integer replyCommentId,
                                   @NotEmpty @Size(max = 500) String content,

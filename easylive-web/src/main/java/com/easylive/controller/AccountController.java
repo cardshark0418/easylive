@@ -2,12 +2,19 @@ package com.easylive.controller;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.servlet.ServletUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.easylive.annotation.GlobalInterceptor;
 import com.easylive.entity.constants.Constants;
+import com.easylive.entity.po.UserFocus;
+import com.easylive.entity.po.UserInfo;
 import com.easylive.entity.vo.ResponseVO;
+import com.easylive.entity.vo.UserCountInfoDto;
 import com.easylive.entity.vo.UserLoginDto;
 import com.easylive.entity.vo.UserRegisterRequest;
 import com.easylive.exception.BusinessException;
+import com.easylive.redis.RedisComponent;
 import com.easylive.redis.RedisUtils;
+import com.easylive.service.UserFocusService;
 import com.easylive.service.UserInfoService;
 import com.easylive.utils.CookieUtil;
 import com.wf.captcha.ArithmeticCaptcha;
@@ -33,6 +40,10 @@ import static com.easylive.entity.vo.ResponseVO.getSuccessResponseVO;
 public class AccountController {
     @Autowired
     private RedisUtils redisUtils;
+    @Autowired
+    private RedisComponent redisComponent;
+    @Autowired
+    private UserFocusService userFocusService;
 
     @Autowired
     private UserInfoService userInfoService;
@@ -107,11 +118,14 @@ public class AccountController {
         }
         if(userLoginDto.getExpireAt() - System.currentTimeMillis() < Constants.ONE_MIN_MILLS*60*24){
             redisUtils.delete(Constants.REDIS_KEY_LOGIN_TOKEN+token);
+            redisUtils.delete(Constants.REDIS_KEY_USER_TOKEN + userLoginDto.getUserId());
             String newToken = UUID.randomUUID().toString();
             userLoginDto.setToken(newToken);
             userLoginDto.setExpireAt(System.currentTimeMillis()+Constants.ONE_MIN_MILLS*60*24*7);
             CookieUtil.setToken2Cookie(response,newToken);
             redisUtils.setex(Constants.REDIS_KEY_LOGIN_TOKEN+newToken,userLoginDto,Constants.ONE_MIN_MILLS*24*7);
+            redisUtils.setex(Constants.REDIS_KEY_USER_TOKEN + userLoginDto.getUserId(), newToken, Constants.ONE_MIN_MILLS  *60*24*7);
+
         }
         return ResponseVO.getSuccessResponseVO(userLoginDto);
     }
@@ -135,6 +149,20 @@ public class AccountController {
             response.addCookie(cookie);
         }
         return ResponseVO.getSuccessResponseVO(null);
+    }
+
+    @RequestMapping(value = "/getUserCountInfo")
+    @GlobalInterceptor(checkLogin = true)
+    public ResponseVO getUserCountInfo(HttpServletRequest request) {
+        UserLoginDto tokenUserInfoDto = redisComponent.getTokenUserInfoDto(request);
+        UserInfo userInfo = userInfoService.getById(tokenUserInfoDto.getUserId());
+        long focus = userFocusService.count(new LambdaQueryWrapper<UserFocus>().eq(UserFocus::getUserId, tokenUserInfoDto.getUserId()));
+        long fans = userFocusService.count(new LambdaQueryWrapper<UserFocus>().eq(UserFocus::getFocusUserId, tokenUserInfoDto.getUserId()));
+        UserCountInfoDto userCountInfoDto = new UserCountInfoDto();
+        userCountInfoDto.setFocusCount((int) focus);
+        userCountInfoDto.setFansCount((int) fans);
+        userCountInfoDto.setCurrentCoinCount(userInfo.getTotalCoinCount());
+        return getSuccessResponseVO(userCountInfoDto);
     }
 
 }
